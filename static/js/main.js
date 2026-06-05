@@ -226,7 +226,7 @@ const setupContactForm = () => {
     return;
   }
 
-  form.addEventListener("submit", async (event) => {
+  form.addEventListener("submit", (event) => {
     event.preventDefault();
 
     const name = (form.querySelector("#name")?.value || "").trim();
@@ -238,35 +238,16 @@ const setupContactForm = () => {
       return;
     }
 
-    status.textContent = "Sending...";
-    if (submitBtn) submitBtn.disabled = true;
+    const waMessage = encodeURIComponent(
+      `Hi Rajappriyan! I found your portfolio.\n\nName: ${name}\nEmail: ${senderEmail}\n\nMessage:\n${message}`
+    );
 
-    try {
-      const response = await fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          access_key: "YOUR_WEB3FORMS_ACCESS_KEY",
-          name,
-          email: senderEmail,
-          message,
-          subject: `Portfolio Contact from ${name}`,
-        }),
-      });
+    // Opens WhatsApp with pre-filled message — delivered directly to your number
+    window.open(`https://wa.me/916369637922?text=${waMessage}`, "_blank");
 
-      const result = await response.json();
-
-      if (result.success) {
-        form.reset();
-        status.textContent = "✅ Message sent! I'll get back to you soon.";
-      } else {
-        throw new Error(result.message || "Submission failed");
-      }
-    } catch {
-      status.textContent = "❌ Something went wrong. Please email rajappriyanraja@gmail.com directly.";
-    } finally {
-      if (submitBtn) submitBtn.disabled = false;
-    }
+    form.reset();
+    if (submitBtn) submitBtn.disabled = false;
+    status.textContent = "✅ WhatsApp opened! Please tap Send to deliver your message.";
   });
 };
 
