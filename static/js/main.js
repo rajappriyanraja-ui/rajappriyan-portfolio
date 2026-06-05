@@ -221,31 +221,51 @@ const setupGithubStats = async () => {
 const setupContactForm = () => {
   const form = document.querySelector("#contact-form");
   const status = document.querySelector("#form-status");
+  const submitBtn = form?.querySelector("button[type='submit']");
   if (!form || !status) {
     return;
   }
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const formData = new FormData(form);
+
+    const name = (form.querySelector("#name")?.value || "").trim();
+    const senderEmail = (form.querySelector("#email")?.value || "").trim();
+    const message = (form.querySelector("#message")?.value || "").trim();
+
+    if (!name || !senderEmail || !message) {
+      status.textContent = "Please fill in all fields.";
+      return;
+    }
+
     status.textContent = "Sending...";
+    if (submitBtn) submitBtn.disabled = true;
 
     try {
-      const formspreeResponse = await fetch(form.action, {
+      const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
-        body: formData,
-        headers: { Accept: "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          access_key: "YOUR_WEB3FORMS_ACCESS_KEY",
+          name,
+          email: senderEmail,
+          message,
+          subject: `Portfolio Contact from ${name}`,
+        }),
       });
 
-      if (formspreeResponse.ok) {
-        form.reset();
-        status.textContent = "Message sent successfully.";
-        return;
-      }
+      const result = await response.json();
 
-      throw new Error("Formspree endpoint is not active yet");
+      if (result.success) {
+        form.reset();
+        status.textContent = "✅ Message sent! I'll get back to you soon.";
+      } else {
+        throw new Error(result.message || "Submission failed");
+      }
     } catch {
-      status.textContent = "Sorry, the contact service is unavailable. Please email rajappriyanraja@gmail.com directly.";
+      status.textContent = "❌ Something went wrong. Please email rajappriyanraja@gmail.com directly.";
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
     }
   });
 };
